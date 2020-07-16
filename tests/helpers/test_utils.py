@@ -1,7 +1,29 @@
 import os
 import yaml
+from git import Repo
 from tssc import TSSCFactory
 
+
+def run_step_generate_metadata_for_tests(temp_dir, config, runtime_args=None):
+    results_dir_path = os.path.join(temp_dir.path, 'tssc-results')
+
+    create_dummy_repo(results_dir_path)
+
+    factory = TSSCFactory(config, results_dir_path)
+    if runtime_args:
+        factory.run_step('generate-metadata', runtime_args)
+    else:
+        factory.run_step('generate-metadata')
+
+def create_dummy_repo(working_dir):
+    """Helper method to create a dummy repo with a file in it"""
+    filename = "dummy.txt"
+    repo = Repo.init(working_dir)
+    with open(os.path.join(working_dir, filename), 'wt') as dt:
+        dt.write("entry 1")
+
+    repo.index.add([os.path.join(working_dir, filename)])
+    repo.index.commit("initial commit")
 
 def run_step_test_with_result_validation(temp_dir, step_name, config, expected_step_results, runtime_args=None):
     results_dir_path = os.path.join(temp_dir.path, 'tssc-results')
