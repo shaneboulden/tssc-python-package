@@ -10,30 +10,25 @@ from tssc.step_implementers.push_artifacts import Maven
 from test_utils import *
 
 
-#def test_tag_source_specify_maven_implementer():
-#    with TempDirectory() as temp_dir:
-#        config = {
-#            'tssc-config': {    
-#                'push-artifacts': {
-#                    'implementer': 'Maven',
-#                    'config': {}
-#                }
-#            }
-#        }
-#        expected_step_results = {'tssc-results': {'push-artifacts': {}}}
-#
-#        run_step_test_with_result_validation(temp_dir, 'push-artifacts', config, expected_step_results)
+# Example CLI command for push to artifactory
+#mvn deploy:deploy-file \
+#-DgroupId=org.acme \
+#-DartifactId=rest-json-quickstart \
+#-Dversion=1.0.2-ce5f284-SNAPSHOT \
+#-Dpackaging=jar \
+#-Dfile=target/tssc-reference-app-quarkus-rest-jsont-1.0-SNAPSHOT.jar \
+#-DrepositoryId=snapshots \
+#-Durl=http://artifactory.apps.tssc.rht-set.com/artifactory/libs-snapshot/
 
 def test_push_artifact_with_artifact_id_missing():
     with TempDirectory() as temp_dir:
         temp_dir.write('pom.xml',b'''<project>
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>my-app</artifactId>
     <groupId>com.mycompany.app</groupId>
     <version>42.1</version>
 </project>''')
         pom_file_path = os.path.join(temp_dir.path, 'pom.xml')
-# create temp config for this unit test w/ temp_pom
+
         generate_metadata_config = {
             'tssc-config': {
                 'generate-metadata': {
@@ -43,7 +38,6 @@ def test_push_artifact_with_artifact_id_missing():
         }
         run_step_generate_metadata_for_tests(temp_dir, generate_metadata_config, runtime_args={'pom-file': str(pom_file_path)})
 
-# use temp_dir/results/generate-metadata.yaml
         config = {
             'tssc-config': {    
                 'push-artifacts': {
@@ -58,10 +52,10 @@ def test_push_artifact_with_artifact_id_missing():
                 }
             }
         }
-        expected_step_results = {'tssc-results': {'push-artifacts': {'version': 'version'}}}
+        expected_step_results = {'tssc-results': {'generate-metadata': {'app-version': '42.1'}, 'push-artifacts': {'version':'42.1'}}}
 
-        # run_step_test_with_result_validation(temp_dir, 'push-artifacts', config, expected_step_results, ARGS[])
         run_step_test_with_result_validation(temp_dir, 'push-artifacts', config, expected_step_results)
+
 """
 def test_push_artifact_with_file_missing():
     with TempDirectory() as temp_dir:
@@ -347,14 +341,5 @@ def test_push_artifact_with_version_missing():
         expected_step_results = {'tssc-results': {'push-artifacts': {'version': 'version'}}}
 
         run_step_test_with_result_validation(temp_dir, 'push-artifacts', config, expected_step_results)
-
-
-#mvn deploy:deploy-file \
-#-DgroupId=org.acme \
-#-DartifactId=rest-json-quickstart \
-#-Dversion=1.0.2-ce5f284-SNAPSHOT \
-#-Dpackaging=jar \
-#-Dfile=target/tssc-reference-app-quarkus-rest-jsont-1.0-SNAPSHOT.jar \
-#-DrepositoryId=snapshots \
-#-Durl=http://artifactory.apps.tssc.rht-set.com/artifactory/libs-snapshot/
 """
+
