@@ -226,19 +226,19 @@ clusters:
 - cluster:
     insecure-skip-tls-verify: true
     server: {kube_api}
-    name: default-cluster
+  name: default-cluster
 
 contexts:
 - context:
     cluster: default-cluster
     user: default-user
-    name: {context}
+  name: {context}
 
 kind: Config
 preferences:
 users:
 - name: default-user
-    user:
+  user:
     token: {kube_token}
             """.format(context=context_name,
                        kube_api=runtime_step_config['kube-api-uri'],
