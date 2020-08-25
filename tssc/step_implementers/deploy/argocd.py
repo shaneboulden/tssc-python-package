@@ -244,9 +244,8 @@ users:
                        kube_api=runtime_step_config['kube-api-uri'],
                        kube_token=runtime_step_config['kube-api-token'])
 
-            with tempfile.NamedTemporaryFile() as temp_file:
+            with tempfile.NamedTemporaryFile(buffering=0) as temp_file:
                 temp_file.write(bytes(kubeconfig, 'utf-8'))
-
                 try:
                     sh.argocd.cluster.add( # pylint: disable=no-member
                         '--kubeconfig',
