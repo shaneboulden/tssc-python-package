@@ -220,26 +220,26 @@ class ArgoCD(StepImplementer):
             context_name = 'default-context'
 
             kubeconfig = """
-                current-context: {context}
-                apiVersion: v1
-                clusters:
-                - cluster:
-                    insecure-skip-tls-verify: true
-                    server: {kube_api}
-                name: default-cluster
+current-context: {context}
+apiVersion: v1
+clusters:
+- cluster:
+    insecure-skip-tls-verify: true
+    server: {kube_api}
+    name: default-cluster
 
-                contexts:
-                - context:
-                    cluster: default-cluster
-                    user: default-user
-                name: {context}
+contexts:
+- context:
+    cluster: default-cluster
+    user: default-user
+    name: {context}
 
-                kind: Config
-                preferences:
-                users:
-                - name: default-user
-                user:
-                    token: {kube_token}
+kind: Config
+preferences:
+users:
+- name: default-user
+    user:
+    token: {kube_token}
             """.format(context=context_name,
                        kube_api=runtime_step_config['kube-api-uri'],
                        kube_token=runtime_step_config['kube-api-token'])
