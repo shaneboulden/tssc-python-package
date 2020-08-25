@@ -32,6 +32,16 @@ from runtime configuration.
   `seconds`                                                               for argocd to sync updates
 | `kube-api-uri`            | True               | https://kubernetes.  | k8s API endpoint
                                                    default.svc
+| `kube-api-token`          | False              |                      | k8s API token. This is
+                                                                          used to add an external
+                                                                          k8s cluster into argocd.
+                                                                          It is required if the
+                                                                          cluster has not already
+                                                                          been added to ArgoCD. The
+                                                                          token should be persistent
+                                                                          (.e.g, a service account
+                                                                          token) and have cluster
+                                                                          admin access.
 | `argocd-helm-chart-path`  | True               | ./                   | Directory containing the
                                                                           helm chart definition
 | `git-email`               | True               |                      | Git email for commit
@@ -201,6 +211,52 @@ class ArgoCD(StepImplementer):
                 '--insecure', _out=sys.stdout)
         except sh.ErrorReturnCode as error:
             raise RuntimeError("Error logging in to ArgoCD: {all}".format(all=error)) from error
+
+        # If the cluster is an external cluster and an api token was provided,
+        # add the cluster to ArgoCD
+        if runtime_step_config['kube-api-uri'] != DEFAULT_CONFIG['kube-api-uri'] and \
+            runtime_step_config.get('kube-api-token'):
+
+            context_name = 'default-context'
+
+            kubeconfig = """
+                current-context: {context}
+                apiVersion: v1
+                clusters:
+                - cluster:
+                    insecure-skip-tls-verify: true
+                    server: {kube_api}
+                name: default-cluster
+
+                contexts:
+                - context:
+                    cluster: default-cluster
+                    user: default-user
+                name: {context}
+
+                kind: Config
+                preferences:
+                users:
+                - name: default-user
+                user:
+                    token: {kube_token}
+            """.format(context=context_name,
+                       kube_api=runtime_step_config['kube-api-uri'],
+                       kube_token=runtime_step_config['kube-api-token'])
+
+            with tempfile.NamedTemporaryFile() as temp_file:
+                temp_file.write(bytes(kubeconfig, 'utf-8'))
+
+                try:
+                    sh.argocd.cluster.add( # pylint: disable=no-member
+                        '--kubeconfig',
+                        temp_file.name,
+                        context_name,
+                        _out=sys.stdout
+                    )
+                except sh.ErrorReturnCode as error:
+                    raise RuntimeError("Error adding cluster to ArgoCD: {cluster}".format(
+                        cluster=runtime_step_config['kube-api-uri'])) from error
 
         argocd_app_name = self._get_app_name(runtime_step_config)
 
