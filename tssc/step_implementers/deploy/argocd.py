@@ -212,14 +212,12 @@ class ArgoCD(StepImplementer):
         except sh.ErrorReturnCode as error:
             raise RuntimeError("Error logging in to ArgoCD: {all}".format(all=error)) from error
 
-        argocd_app_name = self._get_app_name(runtime_step_config)
-
         # If the cluster is an external cluster and an api token was provided,
         # add the cluster to ArgoCD
         if runtime_step_config['kube-api-uri'] != DEFAULT_CONFIG['kube-api-uri'] and \
             runtime_step_config.get('kube-api-token'):
 
-            context_name = '{app_name}-context'.format(app_name=argocd_app_name)
+            context_name = '{server}-context'.format(server=runtime_step_config['kube-api-uri'])
 
             kubeconfig = """
 current-context: {context}
@@ -307,6 +305,8 @@ users:
                 raise RuntimeError("Error invoking git: {all}".format(all=error)) from error
 
             self._git_tag_and_push(repo_directory, runtime_step_config)
+
+            argocd_app_name = self._get_app_name(runtime_step_config)
 
             try:
                 sh.argocd.app.get(argocd_app_name, _out=sys.stdout) # pylint: disable=no-member
@@ -396,7 +396,8 @@ users:
             bytes(template.render(jinja_runtime_step_config), 'utf-8')
         )
 
-        try: shutil.copyfile(rendered_values_file, repo_directory + '/' + values_file_name)
+        try:
+            shutil.copyfile(rendered_values_file, repo_directory + '/' + values_file_name)
         except (shutil.SameFileError, OSError, IOError) as error:
             raise RuntimeError("Error copying {values_file} file: {all}".format(
                 values_file=values_file_name, all=error)) from error
