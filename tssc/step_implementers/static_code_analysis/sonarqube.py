@@ -83,6 +83,7 @@ Example: Existing Sonar Properties File (minimal)
 
 import os
 import sys
+import hashlib
 
 import sh
 from tssc import StepImplementer
@@ -252,4 +253,19 @@ class SonarQube(StepImplementer):
             name='sonarqube-result-set',
             value=f'{working_directory}/report-task.txt'
         )
+
+        # this is where we need to read the file and generate an attestation
+        BUF_SIZE = 65536
+        sha256 = hashlib.sha256()
+        with open(f'{working_directory}/report-task.txt') as f:
+            data = f.read(BUF_SIZE)
+            if not data:
+                break
+            sha256.update(data)
+
+        step_result.add_attestation(
+            name=f'{working_directory}/report-task.txt',
+            hash_value=sha256.hexdigest()
+        )
+
         return step_result

@@ -32,6 +32,7 @@ class StepResult: # pylint: disable=too-many-instance-attributes
         self.__success = True
         self.__message = ''
         self.__artifacts = {}
+        self.__attestation = {}
 
     @classmethod
     def from_step_implementer(cls, step_implementer):
@@ -178,6 +179,36 @@ class StepResult: # pylint: disable=too-many-instance-attributes
         self.__artifacts[name] = {
             'description': description,
             'value': value
+        }
+
+    @property
+    def attestations(self):
+        """
+        Returns
+        -------
+        dict
+            the attestation for all artifacts for the step
+            For example
+            {
+                'artifact1': 'SHA256...',
+                'artifact2': 'SHA256...'
+            }
+        """
+        return self.__attestations
+
+    def add_attestation(self,name,hash_value)
+        """
+        Add an attestation for the given artifact
+
+        Paramters
+        ---------
+        name : str
+            Required name of the artifact
+        hash : str
+            Hash of the artifact
+        """
+        self.__attestations[name] = {
+            'hash': hash_value
         }
 
     @property
